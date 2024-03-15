@@ -179,3 +179,34 @@ autoplot(res_spr,type="roc")
 autoplot(res_spr, type = "prc")
 autoplot(res_spr, type = "prediction")
 #as.data.table(mlr_measures)
+
+##############################################Tuning###############################33
+lrn_ranger=lrn("classif.rpart",predict_type="prob")
+# Define the parameter grid for tuning
+param_grid_cart <- ParamSet$new(list(
+  ParamDbl$new("cp", lower = 0.001, upper = 0.1)  # Cost complexity parameter
+))
+param_grid_ranger <- ParamSet$new(list(
+  ParamInt$new("num.trees", lower = 50, upper = 200),
+  ParamInt$new("mtry", lower = 2, upper = 6)
+  # Add other hyperparameters as needed
+))
+measures <- list(
+  msr("classif.ce"),
+  msr("classif.acc"),
+  msr("classif.fpr"),
+  msr("classif.fnr"),
+  msr("classif.auc")
+)
+inst=ti(
+  task=credit.task,
+  learner=lrn_ranger,
+  resampling=rsmp("cv",folds=5),
+  measures=measures,
+  search_space=param_grid_cart,
+  terminator=trm("none")
+)
+tuner = tnr("grid_search",resolution=5)
+tuner
+tuner$optimize(inst)
+###########################################################################################3
